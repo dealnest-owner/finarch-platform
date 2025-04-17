@@ -7,20 +7,23 @@ import { supabase } from "@/lib/supabaseClient";
 
 export default function ChangeEmailPage() {
   const router = useRouter();
-  const [currentEmail, setCurrentEmail] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [currentEmail, setCurrentEmail] = useState<string>("");
+  const [newEmail, setNewEmail] = useState<string>("");
+  const [message, setMessage] = useState<string>("");
+  const [error, setError] = useState<string>("");
 
   // 로그인 상태 확인 및 현재 이메일 가져오기
   useEffect(() => {
     const loadSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         router.push("/");
         return;
       }
-      setCurrentEmail(session.user.email);
+      // undefined일 경우를 대비해 빈 문자열로 폴백
+      setCurrentEmail(session.user.email ?? "");
     };
     loadSession();
   }, [router]);
@@ -28,24 +31,21 @@ export default function ChangeEmailPage() {
   const handleChange = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 이전 메시지 모두 초기화
+    // 이전 메시지 초기화
     setError("");
     setMessage("");
 
     const email = newEmail.trim().toLowerCase();
 
-    // 비어있는지
     if (!email) {
       setError("변경할 이메일을 입력해주세요.");
       return;
     }
-    // 형식 체크
     const emailRegex = /^\S+@\S+\.\S+$/;
     if (!emailRegex.test(email)) {
       setError("유효한 이메일 주소를 입력해주세요.");
       return;
     }
-    // 현재 이메일과 같은지
     if (email === currentEmail) {
       setError("현재 사용 중인 이메일과 동일합니다.");
       return;
