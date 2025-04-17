@@ -1,10 +1,10 @@
+// pages/signup.tsx
+
 import { useState } from "react";
-import { useRouter } from "next/router";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -13,8 +13,10 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { error } = await supabase.auth.signUp({ email, password });
-    if (error) setErrorMsg(error.message);
-    else {
+    if (error) {
+      setErrorMsg(error.message);
+      setSuccessMsg("");
+    } else {
       setSuccessMsg("회원가입 성공! 이메일 인증 후 로그인해주세요.");
       setErrorMsg("");
       setEmail("");
@@ -44,7 +46,10 @@ export default function SignupPage() {
           className="p-2 border rounded"
           required
         />
-        <button type="submit" className="p-2 bg-green-600 text-white rounded">
+        <button 
+          type="submit" 
+          className="p-2 bg-green-600 text-white rounded"
+        >
           회원가입
         </button>
       </form>
