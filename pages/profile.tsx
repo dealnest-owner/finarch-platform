@@ -20,28 +20,45 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    const fetchOrCreateProfile = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         router.push("/");
         return;
       }
       const user = session.user;
-      const { data, error } = await supabase
+
+      // 1) 프로필 조회
+      let { data, error } = await supabase
         .from("profiles")
         .select("id, email, full_name")
         .eq("id", user.id)
         .single();
-      if (error || !data) {
-        console.error(error);
-        router.push("/dashboard");
-      } else {
-        setProfile(data);
-        setName(data.full_name || "");
+
+      // 2) 레코드가 없으면 새로 생성
+      if (!error && !data) {
+        const insert = await supabase
+          .from("profiles")
+          .insert({ id: user.id, email: user.email })
+          .select("id, email, full_name")
+          .single();
+        data = insert.data!;
+        error = insert.error;
       }
+
+      // 3) 에러 처리 혹은 상태 세팅
+      if (error || !data) {
+        console.error("프로필 로드/생성 실패:", error);
+        router.push("/dashboard");
+        return;
+      }
+      setProfile(data);
+      setName(data.full_name || "");
       setLoading(false);
     };
-    fetchProfile();
+    fetchOrCreateProfile();
   }, [router]);
 
   const handleUpdate = async () => {
